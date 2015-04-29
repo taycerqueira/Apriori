@@ -15,7 +15,7 @@ public class AlgoritmoApriori {
 	
 	private double suporte = 0.3;
 	private double confianca = 0.5;
-	private String arquivoTransacoes = "transacoes.txt";
+	private String arquivoTransacoes = "transacoes3.txt";
 	private int quantTransacoes;
 	private ArrayList<String> transacoes; //guarda as transa��es. cada item do array � uma linda da transa��o. para pegar os itens separadamente � necess�rio quebrar a string
 	private HashMap<Integer, ArrayList<Item>> itemset = new HashMap<Integer, ArrayList<Item>>(); //conjuntos poss�veis
@@ -51,10 +51,12 @@ public class AlgoritmoApriori {
 			
 		}while(conjuntoFrequente.size() > 1);
 		
-		List<Combinacao>  combinacoes = geraRegras();
-		for(Combinacao combinacao: combinacoes){
-			System.out.println("Se "+combinacao.getCausa()+" entao "+combinacao.getConsequencia());
-		}
+		List<Regra>  regras = geraRegras();
+		calcConfianca(regras);
+		/*for(Regra combinacao: regras){
+			if(combinacao.getConfianca() >= confianca)
+			System.out.println("Se "+combinacao.getCausa()+" entao "+combinacao.getConsequencia() + "confianca = "+combinacao.getConfianca());
+		}*/
 	}
 	
 	//Gera o conjunto C1 a partir do arquivo .txt
@@ -87,7 +89,7 @@ public class AlgoritmoApriori {
 					if(!itensTransacao.contains(item)){
 						itensTransacao.add(item);
 						//System.out.println("C1: " + item);
-						System.out.println("{" + item + "}");
+						//System.out.println("{" + item + "}");
 					}
 					
 				}
@@ -175,7 +177,7 @@ public class AlgoritmoApriori {
 					
 						for(String item2 : data2){
 							if(!data1.contains(item2)){
-								diferentes += item2 + " " ;
+								diferentes += item2 + " ";
 							}else{
 								if(iguais.indexOf(item2) == -1){
 									iguais += item2 + " ";
@@ -245,7 +247,8 @@ public class AlgoritmoApriori {
 	 * Se o suporte do conjunto for maior ou igual ao suporte m�nimo, adicionar ele ao HashMap itemsetFrequente
 	 * */
 	private ArrayList<Item> geraItemsetFrequente(ArrayList<Item> itemset, int nivel){
-		System.out.println("=> Gerando itemsets frequentes de n�vel " + nivel);
+		
+		//System.out.println("=> Gerando itemsets frequentes de n�vel " + nivel);
 		
 		if(nivel == 1){
 			
@@ -278,12 +281,11 @@ public class AlgoritmoApriori {
 					//System.out.prixntln("O item: '" + item + "' possui o suporte necess�rio");
 					System.out.println("{" + item + "}");
 					conjuntoFrequente.add(item);
+		
 				}
 				
 			}
-			
-			return conjuntoFrequente;
-			
+			return conjuntoFrequente;	
 		}
 		else{
 			
@@ -350,20 +352,20 @@ public class AlgoritmoApriori {
 		}	
 	}
 	
-	private List<Combinacao> geraRegras(){
+	private List<Regra> geraRegras(){
 		
-		List<Combinacao> combinacoes = new ArrayList<Combinacao>(); 
+		List<Regra> combinacoes = new ArrayList<Regra>(); 
 		
 		for(int nivel = frequentItemset.size(); nivel > 1; nivel--){
 		
-			System.out.println("nível => "+nivel);
+			//System.out.println("nível => "+nivel);
 			ArrayList<Item> conjuntos =  frequentItemset.get(nivel);
 			
 			for (Item item : conjuntos) {
 			
 				ArrayList<String> elementos = new ArrayList<String>();
 				String conjunto = item.getCombinacao();
-				System.out.println("{"+conjunto+"}");
+				//System.out.println("{"+conjunto+"}");
 			
 				StringTokenizer token = new StringTokenizer(conjunto, " ");
 				
@@ -377,7 +379,6 @@ public class AlgoritmoApriori {
 				
 				for(int index = 0; index < elementos.size(); index++){
 					
-					System.out.println("{"+elementos.get(index)+"}");
 					int combPossiveis = (elementos.size() - 1) * (elementos.size() - 2) + 1; 
 					if(nivel == 2)
 						combPossiveis++;
@@ -394,16 +395,16 @@ public class AlgoritmoApriori {
 							consequencias[0] += elementos.get(i) + " ";
 						}
 						
-						Combinacao c = new Combinacao(causas[0], consequencias[0], 0);
-						if(causas[0] != null && consequencias[0] != null && !combinacoes.contains(c))
+						Regra c = new Regra(causas[0], consequencias[0], 0, nivel);
+						if(causas[0] != null && consequencias[0] != null && !consequencias[0].equals("") && !combinacoes.contains(c))
 							combinacoes.add(c);
 						
 						causas[1] = consequencias[0]; 
 						consequencias[1] = causas[0];
 						
-						c = new Combinacao(causas[0], consequencias[0], 0);
+						c = new Regra(causas[0], consequencias[0], 0, nivel);
 						
-						if(causas[1] != null && consequencias[1] != null && !combinacoes.contains(c))
+						if(causas[1] != null && consequencias[1] != null && !consequencias[0].equals("") &&  !combinacoes.contains(c))
 							combinacoes.add(c);
 
 					}else{
@@ -415,7 +416,7 @@ public class AlgoritmoApriori {
 						consequencias[0] = getConsequencia(causas[0], elementos);
 						
 						if(causas[0] != null)
-							combinacoes.add(new Combinacao(causas[0], consequencias[0], 0));
+							combinacoes.add(new Regra(causas[0], consequencias[0], 0, nivel));
 						
 						for(int i = 0; i < combPossiveis && iComb < combPossiveis; i++){
 							String elemento = causas[i];  
@@ -423,8 +424,8 @@ public class AlgoritmoApriori {
 								causas[iComb] = elemento + " " + elementos.get(j); 
 								consequencias[iComb] = getConsequencia(causas[iComb], elementos);
 								
-								Combinacao c = new Combinacao(causas[iComb], consequencias[iComb], 0);
-								if(causas[iComb] != null && consequencias[iComb] != null && !combinacoes.contains(c))
+								Regra c = new Regra(causas[iComb], consequencias[iComb], 0, nivel);
+								if(causas[iComb] != null && consequencias[iComb] != null && !consequencias[i].equals("") && !combinacoes.contains(c))
 									combinacoes.add(c);
 								
 								iComb++;
@@ -460,8 +461,47 @@ public class AlgoritmoApriori {
 		
 		return consequencia;
 	}
-
-
-
-
+	
+	private void calcConfianca(List<Regra> regras){
+		
+		for(Regra regra : regras){
+			
+			String linha = regra.getCausa() + " " + regra.getConsequencia(); 
+			System.out.println("{"+linha+"}");
+			int freqAB = getFrequencia(linha, regra.getNivel());
+			int freqA = getFrequencia(regra.getCausa(), regra.getNivel());
+			
+			double confianca = freqAB/(double)freqA;
+			regra.setConfianca(confianca);
+		}
+		
+	}
+	
+	private int getFrequencia(String lado, int nivel){
+	
+		StringTokenizer token = new StringTokenizer(lado, " ");
+		List<String> conjunto = new ArrayList<String>(); 
+		
+		while(token.hasMoreTokens()){
+			conjunto.add(token.nextToken()); 
+		}
+		
+		int count = 0;
+		List<Item> freq = this.frequentItemset.get(nivel);
+		
+		for(Item item : freq){
+			for(String elemento : conjunto){
+				if(item.getCombinacao().indexOf(elemento) != -1){
+					count++;
+				}
+			}
+			if(count == conjunto.size()){
+				System.out.println(item.getCombinacao() + " = " + item.getFrequencia());
+				return item.getFrequencia(); 
+				
+			}
+			count = 0;
+		}
+		return 0;
+	}
 }

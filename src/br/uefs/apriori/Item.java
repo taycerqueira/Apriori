@@ -34,7 +34,7 @@ public class Item {
 	
 	@Override
 	public String toString(){
-		return "combinacao => ["+this.combinacao+"] ; frequencia => ["+this.frequencia+"]; suporte => ["+this.suporte+"]";
+		return "combinacao => ["+this.combinacao+"] ; frequencia => ["+this.frequencia+"]";
 	}
 	
 	

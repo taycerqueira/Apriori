@@ -1,16 +1,18 @@
 package br.uefs.apriori;
 
-public class Combinacao {
+public class Regra {
 
 	private String causa; 
 	private String consequencia; 
 	private double confianca;
+	private int nivel;
 	
-	public Combinacao(String causa, String consequencia, double confianca) {
+	public Regra(String causa, String consequencia, double confianca, int nivel) {
 		super();
 		this.causa = causa;
 		this.consequencia = consequencia;
 		this.confianca = confianca;
+		this.nivel =  nivel;
 	}
 	public String getCausa() {
 		return causa;
@@ -31,10 +33,19 @@ public class Combinacao {
 		this.confianca = confianca;
 	} 
 	
+	public int getNivel() {
+		return nivel;
+	}
+	public void setNivel(int nivel) {
+		this.nivel = nivel;
+	}
+	
+	
+	
 	@Override
 	public boolean equals(Object o){
-		if(o instanceof Combinacao){
-			Combinacao c = (Combinacao) o; 
+		if(o instanceof Regra){
+			Regra c = (Regra) o; 
 			if(this.causa.equals(c.getCausa()) && this.consequencia.equals(c.getConsequencia())){
 				return true;
 			}
