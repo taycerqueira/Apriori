@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import javax.swing.ComboBoxEditor;
+
 public class AlgoritmoApriori {
 	
 	private double suporte = 0.3;
@@ -40,7 +42,7 @@ public class AlgoritmoApriori {
 		int i = 1;
 		do{
 			conjuntoFrequente = geraItemsetFrequente(this.itemset.get(i), i); //Gera o conjunto L
-			if(conjuntoFrequente.size() > 1){
+			if(conjuntoFrequente.size() > 0){
 				this.frequentItemset.put(i, conjuntoFrequente);
 				conjunto = geraItemset(this.frequentItemset.get(i), i); //Gera o conjunto C
 				this.itemset.put(i+1, conjunto);
@@ -48,6 +50,11 @@ public class AlgoritmoApriori {
 			}
 			
 		}while(conjuntoFrequente.size() > 1);
+		
+		List<Combinacao>  combinacoes = geraRegras();
+		for(Combinacao combinacao: combinacoes){
+			System.out.println("Se "+combinacao.getCausa()+" entao "+combinacao.getConsequencia());
+		}
 	}
 	
 	//Gera o conjunto C1 a partir do arquivo .txt
@@ -93,11 +100,7 @@ public class AlgoritmoApriori {
 			}
 			this.itemset.put(1, itens);
 
-		} catch (FileNotFoundException e) {
-			
-			System.out.println(e);
-			
-		} catch (IOException e) {
+		}  catch (IOException e) {
 			
 			System.out.println(e);
 			
@@ -272,7 +275,7 @@ public class AlgoritmoApriori {
 				
 				
 				if(item.getSuporte() >= suporte){
-					//System.out.println("O item: '" + item + "' possui o suporte necess�rio");
+					//System.out.prixntln("O item: '" + item + "' possui o suporte necess�rio");
 					System.out.println("{" + item + "}");
 					conjuntoFrequente.add(item);
 				}
@@ -346,6 +349,119 @@ public class AlgoritmoApriori {
 			
 		}	
 	}
+	
+	private List<Combinacao> geraRegras(){
+		
+		List<Combinacao> combinacoes = new ArrayList<Combinacao>(); 
+		
+		for(int nivel = frequentItemset.size(); nivel > 1; nivel--){
+		
+			System.out.println("nível => "+nivel);
+			ArrayList<Item> conjuntos =  frequentItemset.get(nivel);
+			
+			for (Item item : conjuntos) {
+			
+				ArrayList<String> elementos = new ArrayList<String>();
+				String conjunto = item.getCombinacao();
+				System.out.println("{"+conjunto+"}");
+			
+				StringTokenizer token = new StringTokenizer(conjunto, " ");
+				
+				while (token.hasMoreTokens()) {
+					String string = new String(token.nextToken()); //pego um item do conjunto
+					elementos.add(string);
+				}
+				
+				//Agora que eu já tenho os elementos de um conjunto (Item), preciso fazer as combinações
+				//Os elemenetos estão na lista "elementos"
+				
+				for(int index = 0; index < elementos.size(); index++){
+					
+					System.out.println("{"+elementos.get(index)+"}");
+					int combPossiveis = (elementos.size() - 1) * (elementos.size() - 2) + 1; 
+					if(nivel == 2)
+						combPossiveis++;
+					
+					String [] causas = new String[combPossiveis];
+					String [] consequencias = new String[combPossiveis]; 
+					
+					if(nivel == 2){
+						
+						causas[0] = elementos.get(index); 
+						consequencias[0] = "";
+						
+						for(int i = index + 1; i < elementos.size(); i++){
+							consequencias[0] += elementos.get(i) + " ";
+						}
+						
+						Combinacao c = new Combinacao(causas[0], consequencias[0], 0);
+						if(causas[0] != null && consequencias[0] != null && !combinacoes.contains(c))
+							combinacoes.add(c);
+						
+						causas[1] = consequencias[0]; 
+						consequencias[1] = causas[0];
+						
+						c = new Combinacao(causas[0], consequencias[0], 0);
+						
+						if(causas[1] != null && consequencias[1] != null && !combinacoes.contains(c))
+							combinacoes.add(c);
+
+					}else{
+						
+						int iComb = 1;
+						int nextCaracter = 1;
+						
+						causas[0] = elementos.get(index);
+						consequencias[0] = getConsequencia(causas[0], elementos);
+						
+						if(causas[0] != null)
+							combinacoes.add(new Combinacao(causas[0], consequencias[0], 0));
+						
+						for(int i = 0; i < combPossiveis && iComb < combPossiveis; i++){
+							String elemento = causas[i];  
+							for(int j = index + nextCaracter; j < elementos.size(); j++){
+								causas[iComb] = elemento + " " + elementos.get(j); 
+								consequencias[iComb] = getConsequencia(causas[iComb], elementos);
+								
+								Combinacao c = new Combinacao(causas[iComb], consequencias[iComb], 0);
+								if(causas[iComb] != null && consequencias[iComb] != null && !combinacoes.contains(c))
+									combinacoes.add(c);
+								
+								iComb++;
+							}
+							nextCaracter++;
+						}
+					}
+				}
+			}
+			
+		}
+		
+		return combinacoes;
+	}
+
+	private String getConsequencia(String causas, ArrayList<String> elementos) {
+	
+		StringTokenizer token = new StringTokenizer(causas, " ");
+		ArrayList<String> values = new ArrayList<String>(); //guarda os item da causa
+		
+		while (token.hasMoreTokens()) {
+			String string = new String(token.nextToken()); //pego um item do conjunto de causa
+			values.add(string);
+		}
+		
+		String consequencia = new String(); //guarda a consequencia
+		
+		for(String elemento : elementos){
+			if(!values.contains(elemento)){//se o item não esta na causa, logo ele é consequencia
+				consequencia += elemento + " ";
+			}
+		}
+		
+		return consequencia;
+	}
+
+
 
 
 }
