@@ -34,13 +34,20 @@ public class AlgoritmoApriori {
 	public AlgoritmoApriori(){
 		
 		geraPrimeiroItemset(); //Gera o conjunto C1
-		//exibeItemset(this.itemset);
-		//System.out.println("Quantidade de Transa��es: " + quantTransacoes);
-		geraItemsetFrequente(this.itemset.get(1), 1); //Gera o conjunto L1
-		geraItemset(this.frequentItemset.get(1), 1); //Gera o conjunto C2
-		geraItemsetFrequente(this.itemset.get(2), 2); //Gera o conjunto L2
-		geraItemset(this.frequentItemset.get(2), 2); //Gera o conjunto C3
-		exibeItemset(itemset);
+		ArrayList<Item> conjuntoFrequente = new ArrayList<Item>();
+		ArrayList<Item> conjunto = new ArrayList<Item>();
+		
+		int i = 1;
+		do{
+			conjuntoFrequente = geraItemsetFrequente(this.itemset.get(i), i); //Gera o conjunto L
+			if(conjuntoFrequente.size() > 1){
+				this.frequentItemset.put(i, conjuntoFrequente);
+				conjunto = geraItemset(this.frequentItemset.get(i), i); //Gera o conjunto C
+				this.itemset.put(i+1, conjunto);
+				i++;
+			}
+			
+		}while(conjuntoFrequente.size() > 1);
 	}
 	
 	//Gera o conjunto C1 a partir do arquivo .txt
@@ -109,7 +116,7 @@ public class AlgoritmoApriori {
 		
 	}
 	
-	private void geraItemset(ArrayList<Item> frequentItemset, int nivel){
+	private ArrayList<Item> geraItemset(ArrayList<Item> frequentItemset, int nivel){
 	
 		System.out.println("=> Gerando itemsets de n�vel " + (nivel+1));
 		
@@ -133,7 +140,7 @@ public class AlgoritmoApriori {
 						}
 					}
 				}
-				this.itemset.put(nivel+1, lista);
+				return lista;
 			}
 			//Gera��o dos conjuntos de tamanho maior que 1
 			else{
@@ -190,7 +197,7 @@ public class AlgoritmoApriori {
 					}
 					data1.clear();
 				}
-				this.itemset.put(nivel + 1, lista);
+				return lista;
 			}
 		//}
 	}
@@ -234,7 +241,7 @@ public class AlgoritmoApriori {
 	 * E calcular o suporte do conjunto
 	 * Se o suporte do conjunto for maior ou igual ao suporte m�nimo, adicionar ele ao HashMap itemsetFrequente
 	 * */
-	private void geraItemsetFrequente(ArrayList<Item> itemset, int nivel){
+	private ArrayList<Item> geraItemsetFrequente(ArrayList<Item> itemset, int nivel){
 		System.out.println("=> Gerando itemsets frequentes de n�vel " + nivel);
 		
 		if(nivel == 1){
@@ -272,7 +279,7 @@ public class AlgoritmoApriori {
 				
 			}
 			
-			this.frequentItemset.put(1, conjuntoFrequente);
+			return conjuntoFrequente;
 			
 		}
 		else{
@@ -335,14 +342,10 @@ public class AlgoritmoApriori {
 				
 			}
 			
-			this.frequentItemset.put(nivel, conjuntoFrequente);
+			return conjuntoFrequente;
 			
 		}	
 	}
-
-	
-
-
 
 
 }
