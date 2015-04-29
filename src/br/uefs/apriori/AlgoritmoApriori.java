@@ -13,11 +13,11 @@ public class AlgoritmoApriori {
 	
 	private double suporte = 0.3;
 	private double confianca = 0.5;
-	String arquivoTransacoes = "transacoes.txt";
+	private String arquivoTransacoes = "transacoes.txt";
 	private int quantTransacoes;
 	private ArrayList<String> transacoes; //guarda as transa��es. cada item do array � uma linda da transa��o. para pegar os itens separadamente � necess�rio quebrar a string
-	private HashMap<Integer, ArrayList<String>> itemset = new HashMap<Integer, ArrayList<String>>(); //conjuntos poss�veis
-	private HashMap<Integer, ArrayList<String>> frequentItemset = new HashMap<Integer, ArrayList<String>>(); //conjuntos com o suporte m�nimo
+	private HashMap<Integer, ArrayList<Item>> itemset = new HashMap<Integer, ArrayList<Item>>(); //conjuntos poss�veis
+	private HashMap<Integer, ArrayList<Item>> frequentItemset = new HashMap<Integer, ArrayList<Item>>(); //conjuntos com o suporte m�nimo
 	
 	
 	//Seleciona os itens contidos nas transa��es (itemset 1) ok
@@ -40,7 +40,7 @@ public class AlgoritmoApriori {
 		geraItemset(this.frequentItemset.get(1), 1); //Gera o conjunto C2
 		geraItemsetFrequente(this.itemset.get(2), 2); //Gera o conjunto L2
 		geraItemset(this.frequentItemset.get(2), 2); //Gera o conjunto C3
-
+		exibeItemset(itemset);
 	}
 	
 	//Gera o conjunto C1 a partir do arquivo .txt
@@ -52,7 +52,9 @@ public class AlgoritmoApriori {
 			BufferedReader dados = new BufferedReader(new FileReader(arquivoTransacoes));
 			List<String> itensTransacao = new ArrayList<String>();
 			this.transacoes = new ArrayList<String>();
+		
 			while (dados.ready()) { 
+				
 				String linha = dados.readLine();
 				
 				if (linha.matches("\\s*")){
@@ -77,9 +79,13 @@ public class AlgoritmoApriori {
 				}
 				
 			}
-			for (String string : itensTransacao) {
-				this.itemset.put(1, (ArrayList<String>) itensTransacao);
+			
+			ArrayList<Item> itens = new ArrayList<Item>();  
+			for(String value : itensTransacao){
+				itens.add(new Item(value, 0, 0));
 			}
+			this.itemset.put(1, itens);
+
 		} catch (FileNotFoundException e) {
 			
 			System.out.println(e);
@@ -92,35 +98,36 @@ public class AlgoritmoApriori {
     	
 	}
 	
-	private void exibeItemset(HashMap<Integer, ArrayList<String>> itemset){
+	private void exibeItemset(HashMap<Integer, ArrayList<Item>> itemset){
 		
 		for (Integer key : itemset.keySet()) {  
-			ArrayList<String> value = itemset.get(key); 
-			for (String item : value) {
+			ArrayList<Item> value = itemset.get(key); 
+			for (Item item : value) {
 				System.out.println(item);
 			} 
 		}
 		
 	}
 	
-	private void geraItemset(ArrayList<String> frequentItemset, int nivel){
+	private void geraItemset(ArrayList<Item> frequentItemset, int nivel){
 	
 		System.out.println("=> Gerando itemsets de n�vel " + (nivel+1));
 		
 		//if(frequentItemset != null){
 			if(nivel == 1){
 			
-				ArrayList<String> lista = new ArrayList<String>();
+				ArrayList<Item> lista = new ArrayList<Item>();
 			
 				for (int i = 0; i < frequentItemset.size(); i++) {
 				
-					String aux1 = frequentItemset.get(i);
+					String aux1 = frequentItemset.get(i).getCombinacao();
 				
 					for(int j = i+1; j < frequentItemset.size(); j++){
-						String aux2 = frequentItemset.get(j);
+						String aux2 = frequentItemset.get(j).getCombinacao();
 						if(!aux1.equals(aux2)){
 							String conj = aux1.concat(" " + aux2);
-							lista.add(conj);
+							Item item = new Item(conj, 0, 0);
+							lista.add(item);
 							//System.out.println("C" + (nivel+1) + ": " + conj);
 							System.out.println("{" + conj + "}");
 						}
@@ -131,13 +138,13 @@ public class AlgoritmoApriori {
 			//Gera��o dos conjuntos de tamanho maior que 1
 			else{
 			
-				ArrayList<String> lista = new ArrayList<String>(); 
+				ArrayList<Item> lista = new ArrayList<Item>(); 
 				List<String> data1 = new ArrayList<String>(); // conjunto de dados do item i 
 				List<String> data2 = new ArrayList<String>(); // conjunto de dados do item i+1
 			
 				for(int i = 0; i < frequentItemset.size(); i++){
 				
-					String conjunto1 = frequentItemset.get(i); //uma combinacao i ja existente
+					String conjunto1 = frequentItemset.get(i).getCombinacao(); //uma combinacao i ja existente
 					StringTokenizer token = new StringTokenizer(conjunto1, " ");
 				
 					while(token.hasMoreTokens()){
@@ -146,7 +153,7 @@ public class AlgoritmoApriori {
 				
 					for(int j = i + 1; j < frequentItemset.size(); j++){
 					
-						String conjunto2 = frequentItemset.get(j); //uma combinacao i+1 existente
+						String conjunto2 = frequentItemset.get(j).getCombinacao(); //uma combinacao i+1 existente
 						token = new StringTokenizer(conjunto2, " ");
 					
 						while(token.hasMoreTokens()){
@@ -174,7 +181,8 @@ public class AlgoritmoApriori {
 					
 						String novaCombinacao = iguais + diferentes;
 						if(!verificarCombinacao(lista, novaCombinacao)){
-							lista.add(novaCombinacao);
+							Item item = new Item(novaCombinacao, 0, 0);
+							lista.add(item);
 							System.out.println("{" + novaCombinacao + "}");
 						}
 					
@@ -193,7 +201,7 @@ public class AlgoritmoApriori {
 	 * @param novaCombinacao a nova proposta de combinação
 	 * @return
 	 */
-	private boolean verificarCombinacao(ArrayList<String> combinacoes,
+	private boolean verificarCombinacao(ArrayList<Item> combinacoes,
 			String novaCombinacao) {
 		
 		StringTokenizer token = new StringTokenizer(novaCombinacao, " ");
@@ -205,9 +213,9 @@ public class AlgoritmoApriori {
 		
 		int count = 0;
 		
-		for(String combinacao : combinacoes){
-			for(String item : conjunto){
-				if(combinacao.indexOf(item) != -1){
+		for(Item item : combinacoes){
+			for(String elemento : conjunto){
+				if(item.getCombinacao().indexOf(elemento) != -1){
 					count++;
 				}
 			}
@@ -226,14 +234,14 @@ public class AlgoritmoApriori {
 	 * E calcular o suporte do conjunto
 	 * Se o suporte do conjunto for maior ou igual ao suporte m�nimo, adicionar ele ao HashMap itemsetFrequente
 	 * */
-	private void geraItemsetFrequente(ArrayList<String> itemset, int nivel){
+	private void geraItemsetFrequente(ArrayList<Item> itemset, int nivel){
 		System.out.println("=> Gerando itemsets frequentes de n�vel " + nivel);
 		
 		if(nivel == 1){
 			
-			ArrayList<String> conjuntoFrequente = new ArrayList<String>();
+			ArrayList<Item> conjuntoFrequente = new ArrayList<Item>();
 			
-			for (String item : itemset) {//Cada item do array � um conjunto de items
+			for (Item item : itemset) {//Cada item do array � um conjunto de items
 				
 				int cont = 0;
 				
@@ -243,7 +251,7 @@ public class AlgoritmoApriori {
 
 				    while (token.hasMoreTokens()) {//Enquanto houver items na transa��o...
 						String t = new String(token.nextToken());
-						if(item.equals(t)){						
+						if(item.getCombinacao().equals(t)){						
 							cont++;
 							break; // ele continua a procurar de qualquer jeito.
 						}
@@ -251,7 +259,12 @@ public class AlgoritmoApriori {
 				}
 				
 				double suporteEncontrado = (double)cont/(double)quantTransacoes;
-				if(suporteEncontrado >= suporte){
+				
+				item.setFrequencia(cont);
+				item.setSuporte(suporteEncontrado);
+				
+				
+				if(item.getSuporte() >= suporte){
 					//System.out.println("O item: '" + item + "' possui o suporte necess�rio");
 					System.out.println("{" + item + "}");
 					conjuntoFrequente.add(item);
@@ -264,12 +277,13 @@ public class AlgoritmoApriori {
 		}
 		else{
 			
-			ArrayList<String> conjuntoFrequente = new ArrayList<String>();
+			ArrayList<Item> conjuntoFrequente = new ArrayList<Item>();
 			
 			for (int i = 0; i < itemset.size(); i++) {
 				
 				ArrayList<String> conjunto = new ArrayList<String>();
-				String conj = itemset.get(i); //� necess�rio agora quebrar essa string em itens
+				Item item = itemset.get(i);
+				String conj = item.getCombinacao(); //� necess�rio agora quebrar essa string em itens
 				//System.out.println("- Conjunto {" + conj + "}");
 				StringTokenizer token1 = new StringTokenizer(conj, " ");
 
@@ -309,10 +323,14 @@ public class AlgoritmoApriori {
 				}
 				
 				double suporteEncontrado = (double)contTrans/(double)quantTransacoes;
+				
+				item.setFrequencia(contTrans);
+				item.setSuporte(suporteEncontrado);
+				
 				if(suporteEncontrado >= suporte){
 					//System.out.println("O conjunto {" + conj + "} possui o suporte necess�rio");
 					System.out.println("{" + conj + "}");
-					conjuntoFrequente.add(conj);
+					conjuntoFrequente.add(item);
 				}
 				
 			}
@@ -321,4 +339,10 @@ public class AlgoritmoApriori {
 			
 		}	
 	}
+
+	
+
+
+
+
 }
