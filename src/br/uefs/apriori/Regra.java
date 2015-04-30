@@ -40,7 +40,10 @@ public class Regra {
 		this.nivel = nivel;
 	}
 	
-	
+	@Override
+	public String toString(){
+		return "Se " + this.causa + " entao " + this.consequencia;
+	}
 	
 	@Override
 	public boolean equals(Object o){
