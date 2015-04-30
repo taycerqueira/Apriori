@@ -1,7 +1,6 @@
 package br.uefs.apriori;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,17 +8,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.swing.ComboBoxEditor;
-
 public class AlgoritmoApriori {
 	
-	private double suporte = 0.3;
-	private double confianca = 0.5;
+	private double suporte;
+	private double confianca;
 	private String arquivoTransacoes = "transacoes3.txt";
+	private String result;
 	private int quantTransacoes;
 	private ArrayList<String> transacoes; //guarda as transa��es. cada item do array � uma linda da transa��o. para pegar os itens separadamente � necess�rio quebrar a string
-	private HashMap<Integer, ArrayList<Item>> itemset = new HashMap<Integer, ArrayList<Item>>(); //conjuntos poss�veis
-	private HashMap<Integer, ArrayList<Item>> frequentItemset = new HashMap<Integer, ArrayList<Item>>(); //conjuntos com o suporte m�nimo
+	private HashMap<Integer, ArrayList<Item>> itemset; //conjuntos poss�veis
+	private HashMap<Integer, ArrayList<Item>> frequentItemset; //conjuntos com o suporte m�nimo
 	
 	
 	//Seleciona os itens contidos nas transa��es (itemset 1) ok
@@ -33,8 +31,17 @@ public class AlgoritmoApriori {
 	
 	//Gera as regras para um itemset frequente e calcular sua confian�a
 	
-	public AlgoritmoApriori(){
+	public AlgoritmoApriori(double suporte, double confianca, String url){
 		
+		this.suporte = suporte; 
+		this.confianca = confianca;
+		this.arquivoTransacoes = url;
+		this.itemset = new HashMap<Integer, ArrayList<Item>>(); //conjuntos poss�veis
+		this.frequentItemset = new HashMap<Integer, ArrayList<Item>>(); //conjuntos com o suporte m�nimo
+	}
+	
+	public void init(){
+
 		geraPrimeiroItemset(); //Gera o conjunto C1
 		ArrayList<Item> conjuntoFrequente = new ArrayList<Item>();
 		ArrayList<Item> conjunto = new ArrayList<Item>();
@@ -54,17 +61,18 @@ public class AlgoritmoApriori {
 		
 		List<Regra>  regras = geraRegras();
 		calcConfianca(regras);
-		System.out.println("============================================= \n\n");
+		this.result = new String();
 		for(Regra combinacao: regras){
-			//if(combinacao.getConfianca() >= confianca)
-			System.out.println( combinacao + " confianca = "+combinacao.getConfianca());
+			if(combinacao.getConfianca() >= confianca){
+				this.result += combinacao + " (conf.: " + combinacao.getConfianca()+ ") \n";
+			}
+			//System.out.println( combinacao + " confianca = "+combinacao.getConfianca());
 		}
 	}
-	
 	//Gera o conjunto C1 a partir do arquivo .txt
 	private void geraPrimeiroItemset(){
 	
-		System.out.println("=> Gerando itemsets de n�vel 1");
+		//System.out.println("=> Gerando itemsets de n�vel 1");
 		
 		try {
 			BufferedReader dados = new BufferedReader(new FileReader(arquivoTransacoes));
@@ -106,7 +114,7 @@ public class AlgoritmoApriori {
 
 		}  catch (IOException e) {
 			
-			System.out.println(e);
+			//System.out.println(e);
 			
 		} 
     	
@@ -125,7 +133,7 @@ public class AlgoritmoApriori {
 	
 	private ArrayList<Item> geraItemset(ArrayList<Item> frequentItemset, int nivel){
 	
-		System.out.println("=> Gerando itemsets de n�vel " + (nivel+1));
+		//System.out.println("=> Gerando itemsets de n�vel " + (nivel+1));
 		
 		//if(frequentItemset != null){
 			if(nivel == 1){
@@ -145,7 +153,7 @@ public class AlgoritmoApriori {
 							Item item = new Item(conj, 0, 0);
 							lista.add(item);
 							//System.out.println("C" + (nivel+1) + ": " + conj);
-							System.out.println("m{" + conj + "}");
+							//System.out.println("m{" + conj + "}");
 						}
 					}
 				}
@@ -199,7 +207,7 @@ public class AlgoritmoApriori {
 						if(!verificarCombinacao(lista, novaCombinacao)){
 							Item item = new Item(novaCombinacao, 0, 0);
 							lista.add(item);
-							System.out.println("t {" + novaCombinacao + "}");
+							//System.out.println("t {" + novaCombinacao + "}");
 						}
 					
 						data2.clear();
@@ -283,7 +291,7 @@ public class AlgoritmoApriori {
 				
 				if(item.getSuporte() >= suporte){
 					//System.out.prixntln("O item: '" + item + "' possui o suporte necess�rio");
-					System.out.println("{" + item + "}");
+					//System.out.println("{" + item + "}");
 					conjuntoFrequente.add(item);
 		
 				}
@@ -345,7 +353,7 @@ public class AlgoritmoApriori {
 				
 				if(suporteEncontrado >= suporte){
 					//System.out.println("O conjunto {" + conj + "} possui o suporte necess�rio");
-					System.out.println("{" + conj + "}");
+					//System.out.println("{" + conj + "}");
 					conjuntoFrequente.add(item);
 				}
 				
@@ -546,5 +554,9 @@ public class AlgoritmoApriori {
 		}
 		return 0;
 		
+	}
+	
+	public String getResult(){
+		return this.result;
 	}
 }
